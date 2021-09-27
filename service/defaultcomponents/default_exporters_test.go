@@ -37,6 +37,7 @@ import (
 	"go.opentelemetry.io/collector/exporter/otlphttpexporter"
 	"go.opentelemetry.io/collector/exporter/prometheusexporter"
 	"go.opentelemetry.io/collector/exporter/zipkinexporter"
+	"go.opentelemetry.io/collector/exporter/site24x7fileexporter"
 	"go.opentelemetry.io/collector/testutil"
 )
 
@@ -56,6 +57,17 @@ func TestDefaultExporters(t *testing.T) {
 			exporter: "file",
 			getConfigFn: func() config.Exporter {
 				cfg := expFactories["file"].CreateDefaultConfig().(*fileexporter.Config)
+				f, err := ioutil.TempFile("", "otelcol_defaults_file_exporter_test*.tmp")
+				require.NoError(t, err)
+				assert.NoError(t, f.Close())
+				cfg.Path = f.Name()
+				return cfg
+			},
+		},
+		{
+			exporter: "site24x7file",
+			getConfigFn: func() config.Exporter {
+				cfg := expFactories["site24x7file"].CreateDefaultConfig().(*site24x7fileexporter.Config)
 				f, err := ioutil.TempFile("", "otelcol_defaults_file_exporter_test*.tmp")
 				require.NoError(t, err)
 				assert.NoError(t, f.Close())

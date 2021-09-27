@@ -48,6 +48,7 @@ import (
 	"go.opentelemetry.io/collector/receiver/otlpreceiver"
 	"go.opentelemetry.io/collector/receiver/prometheusreceiver"
 	"go.opentelemetry.io/collector/receiver/zipkinreceiver"
+	"go.opentelemetry.io/collector/exporter/site24x7fileexporter"
 )
 
 // Components returns the default set of components used by the
@@ -94,6 +95,7 @@ func Components() (
 		otlpexporter.NewFactory(),
 		otlphttpexporter.NewFactory(),
 		kafkaexporter.NewFactory(),
+		site24x7fileexporter.NewFactory(),
 	)
 	if err != nil {
 		errs = append(errs, err)
