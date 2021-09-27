@@ -21,7 +21,7 @@ import (
 	"os"
 	"sync"
 	"net/http"
-	"net/url"
+	"bytes"
 
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/consumer"
@@ -80,8 +80,10 @@ func exportMessageAsLine(e *site24x7fileexporter, buf []byte) error {
 	if _, err := io.WriteString(e.file, "\n"); err != nil {
 		return err
 	}
-	responseBody := buf
-	resp, err := http.Post("https://catalyst.localsite24x7.com/opentelemetry", "application/json", responseBody)
+
+	responseBody := bytes.NewBuffer(buf)
+	
+	resp, err := http.Post("https://localhost/opentelemetry", "application/json", responseBody)
 	if err != nil {
 		return err 
 	}
