@@ -18,6 +18,10 @@ exporters:
   jaeger:
     endpoint: jaeger-all-in-one:14250
     insecure: true
+    
+  site24x7file:
+    path: /home/data/collector.json
+    url: https://localhost/opentelementry
 
 processors:
   batch:
@@ -35,8 +39,8 @@ service:
     traces:
       receivers: [otlp]
       processors: [batch]
-      exporters: [logging, zipkin, jaeger]
+      exporters: [logging, zipkin, jaeger, site24x7file]
     metrics:
       receivers: [otlp]
       processors: [batch]
-      exporters: [logging, prometheus]
+      exporters: [logging, prometheus, site24x7file]

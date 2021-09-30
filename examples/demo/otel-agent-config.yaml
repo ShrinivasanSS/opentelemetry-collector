@@ -15,6 +15,9 @@ exporters:
     insecure: true
   logging:
     loglevel: debug
+  site24x7file:
+    path: /home/data/agent.json
+    url: https://localhost/opentelementry
 
 processors:
   batch:
@@ -32,8 +35,8 @@ service:
     traces:
       receivers: [otlp, opencensus, jaeger, zipkin]
       processors: [batch]
-      exporters: [otlp, logging]
+      exporters: [otlp, logging,site24x7file]
     metrics:
       receivers: [otlp, opencensus]
       processors: [batch]
-      exporters: [otlp, logging]
+      exporters: [otlp, logging,site24x7file]

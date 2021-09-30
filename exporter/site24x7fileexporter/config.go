@@ -36,6 +36,8 @@ type Config struct {
 
 	// Path of the file to write to. Path is relative to current directory.
 	Path string `mapstructure:"path"`
+	// URL to which the opentelemetry data is pushed to.
+	Url string `mapstructure:"url"`
 }
 
 var _ config.Exporter = (*Config)(nil)
@@ -44,6 +46,10 @@ var _ config.Exporter = (*Config)(nil)
 func (cfg *Config) Validate() error {
 	if cfg.Path == "" {
 		return errors.New("path must be non-empty")
+	}
+
+	if cfg.Url == "" {
+		return errors.New("url must be non-empty")
 	}
 
 	return nil

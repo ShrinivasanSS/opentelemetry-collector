@@ -15,13 +15,13 @@
 package site24x7fileexporter
 
 import (
+	"bytes"
 	"context"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"sync"
-	"net/http"
-	"bytes"
 
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/consumer"
@@ -38,6 +38,7 @@ var logsMarshaler = otlp.NewJSONLogsMarshaler()
 // in Protobuf-JSON format.
 type site24x7fileexporter struct {
 	path  string
+	url   string
 	file  io.WriteCloser
 	mutex sync.Mutex
 }
@@ -74,18 +75,22 @@ func exportMessageAsLine(e *site24x7fileexporter, buf []byte) error {
 	// Ensure only one write operation happens at a time.
 	e.mutex.Lock()
 	defer e.mutex.Unlock()
-	if _, err := e.file.Write(buf); err != nil {
-		return err
-	}
+	//if _, err := e.file.Write(buf); err != nil {
+	//	return err
+	//}
 	if _, err := io.WriteString(e.file, "\n"); err != nil {
 		return err
 	}
 
 	responseBody := bytes.NewBuffer(buf)
-	
-	resp, err := http.Post("https://localhost/opentelemetry", "application/json", responseBody)
+
+	resp, err := http.Post(e.url, "application/json", responseBody)
+	io.WriteString(e.file, "\nPosting telemetry data to url. \n")
 	if err != nil {
-		return err 
+		io.WriteString(e.file, "\nError in posting data to url. \n")
+		errstr := err.Error()
+		io.WriteString(e.file, errstr)
+		return err
 	}
 	defer resp.Body.Close()
 	//Read the response body
@@ -96,7 +101,7 @@ func exportMessageAsLine(e *site24x7fileexporter, buf []byte) error {
 	if _, err := e.file.Write(body); err != nil {
 		return err
 	}
-	
+
 	return nil
 }
 
