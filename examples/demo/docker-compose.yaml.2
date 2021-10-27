@@ -1,67 +1,40 @@
 version: "2"
 services:
+
   # Jaeger
   jaeger-all-in-one:
     image: jaegertracing/all-in-one:latest
-    env_file:
-      - proxy.env
     ports:
       - "16686:16686"
       - "14268"
       - "14250"
-    networks:
-      - demo_network
 
   # Zipkin
   zipkin-all-in-one:
     image: openzipkin/zipkin:latest
-    env_file:
-      - proxy.env
     ports:
       - "9411:9411"
-    networks:
-      - demo_network
 
-  prometheus:
-    container_name: prometheus
-    image: prom/prometheus:latest
-    env_file:
-      - proxy.env
-    volumes:
-      - ./prometheus.yaml:/etc/prometheus/prometheus.yml
-    ports:
-      - "9090:9090"
-    networks:
-      - demo_network
-
+  # Collector
   otel-collector:
     image: ${OTELCOL_IMG}
-    command: ["--config=/etc/otel-collector-config.yaml"]
-    env_file:
-      - proxy.env
+    command: ["--config=/etc/otel-collector-config.yaml", "${OTELCOL_ARGS}"]
     volumes:
       - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
-      - ./data/:/home/data/
     ports:
       - "1888:1888"   # pprof extension
       - "8888:8888"   # Prometheus metrics exposed by the collector
       - "8889:8889"   # Prometheus exporter metrics
       - "13133:13133" # health_check extension
-      - "4317:4317"        # OTLP gRPC receiver
+      - "4317"        # OTLP gRPC receiver
       - "55670:55679" # zpages extension
-    extra_hosts:
-      - "Shrini-2027: 192.168.223.245"
     depends_on:
       - jaeger-all-in-one
       - zipkin-all-in-one
-    networks:
-      - demo_network
- 
+
   # Agent
   otel-agent:
     image: ${OTELCOL_IMG}
-    env_file:
-      - proxy.env
     command: ["--config=/etc/otel-agent-config.yaml", "${OTELCOL_ARGS}"]
     volumes:
       - ./otel-agent-config.yaml:/etc/otel-agent-config.yaml
@@ -76,13 +49,9 @@ services:
       - "1777:1777"   # pprof extension
       - "55679:55679" # zpages extension
       - "13133"       # health_check
-    extra_hosts:
-      - "Shrini-2027: 192.168.223.245"
     depends_on:
       - otel-collector
-    networks:
-      - demo_network
-      
+
   # Synthetic load generators
   jaeger-emitter:
     image: omnition/synthetic-load-generator:1.0.25
@@ -90,9 +59,27 @@ services:
       - JAEGER_COLLECTOR_URL=http://otel-agent:14268
     depends_on:
       - otel-agent
-    networks:
-      - demo_network
 
-networks:
-  demo_network:
-    driver: bridge
+  zipkin-emitter:
+    image: omnition/synthetic-load-generator:1.0.25
+    environment:
+      - ZIPKINV2_JSON_URL=http://otel-agent:9411/api/v2/spans
+    depends_on:
+      - otel-agent
+
+  metrics-load-generator:
+    build:
+      dockerfile: Dockerfile
+      context: ./app
+    environment:
+      - OTEL_AGENT_ENDPOINT=otel-agent:4317
+    depends_on:
+      - otel-agent
+
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus.yaml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"

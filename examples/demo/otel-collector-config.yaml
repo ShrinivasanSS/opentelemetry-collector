@@ -21,7 +21,8 @@ exporters:
     
   site24x7file:
     path: /home/data/collector.json
-    url: https://localhost/opentelementry
+  #  url: https://catalyst.localsite24x7.com/arh/opentelementry
+    url: http://Shrini-2027/arh/opentelemetry
 
 processors:
   batch:

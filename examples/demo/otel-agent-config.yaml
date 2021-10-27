@@ -17,7 +17,8 @@ exporters:
     loglevel: debug
   site24x7file:
     path: /home/data/agent.json
-    url: https://localhost/opentelementry
+    url: http://Shrini-2027/arh/opentelemetry
+  #  url: https://catalyst.localsite24x7.com/arh/opentelementry
 
 processors:
   batch:

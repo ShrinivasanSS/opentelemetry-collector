@@ -1,0 +1,8 @@
+FROM omnition/synthetic-load-generator:1.0.29
+MAINTAINER sss
+
+COPY topologies/* /opt/omnition/topologies/
+
+WORKDIR /opt/omnition/
+
+CMD ["./start.sh"]
